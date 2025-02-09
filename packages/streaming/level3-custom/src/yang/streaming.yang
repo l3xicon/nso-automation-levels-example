@@ -97,10 +97,6 @@ module streaming {
              "/acdsep:service-endpoint/acdsep:endpoint-id";
       }
     }
-    leaf is-active {
-      type boolean;
-      default false;
-    }
     container oper-status {
       config false;
       tailf:info "The actual operational state of the DC.";
@@ -135,10 +131,17 @@ module streaming {
         error-message "Only the name of an edge device makes sense here.";
       }
     }
-    leaf dc {
-      type leafref {
-        path "/dc/name";
-      }
+    container oper-status {
+        config false;
+        tailf:info "The actual operational state of the service.";
+        tailf:cdb-oper {
+            tailf:persistent true;
+        }
+        leaf chosen-dc {
+            type leafref {
+                path "/dc/name";
+            }
+        }
     }
     action load-from-storage {
       tailf:actionpoint load-from-storage;

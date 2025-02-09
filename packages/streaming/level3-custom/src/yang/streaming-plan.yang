@@ -67,7 +67,11 @@ submodule streaming-plan {
     }
 
     ncs:component-type "dc" {
-      ncs:state "ncs:init";
+      ncs:state "ncs:init"{
+        ncs:create {
+            ncs:nano-callback;
+        }
+    }
       ncs:state "streaming:skylight-configured" {
         ncs:create {
           ncs:nano-callback;
@@ -76,12 +80,6 @@ submodule streaming-plan {
       ncs:state "streaming:fw-configured" {
         ncs:create {
           ncs:nano-callback;
-          ncs:pre-condition {
-            ncs:monitor
-              "/streaming:dc[name = $SERVICE/dc]" {
-              ncs:trigger-expr "is-active = 'true'";
-            }
-          }
         }
       }
       ncs:state "ncs:ready";

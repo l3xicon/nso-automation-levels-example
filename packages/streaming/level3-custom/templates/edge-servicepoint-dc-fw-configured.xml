@@ -3,7 +3,7 @@
                  componenttype="streaming:dc"
                  state="streaming:fw-configured">
   <?set EDGE = {./name}?>
-  <?set DC = {./dc}?>
+  <?set DC = {./oper-status/chosen-dc}?>
   <?set-root-node {/}?>
   <?set EDGE_ADDR = {/ncs:devices/device[name=$EDGE]/address}?>
   <?set EDGE_PORT = 554?>
