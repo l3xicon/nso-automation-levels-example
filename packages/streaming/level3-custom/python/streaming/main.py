@@ -34,7 +34,7 @@ class DCInit(NanoService):
         self.log.info(f'cb_nano_create: DCInit for {service.name}')
 
         # Find the DC with the lowest jitter
-        best_score = 100000
+        best_score = 10sho  0000
         best_dc = None
 
         for dc in root.dc:
