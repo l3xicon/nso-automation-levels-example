@@ -29,9 +29,15 @@ class SkylightNotificationAction(ncs.dp.Action):
                 r.streaming__dc[notification.device].oper_status.jitter = notification.jitter
                 t.apply()
 
-            edge = r.streaming__edge[edge_names.pop(0)]
-            self.log.info(f'Optimizer re-deploying service {edge.name}')
-            edge.reactive_re_deploy()
+                # Automatically re-deploy services that are on the DC in the notification,
+                # but let all other services stay as they are
+                for edge in r.streaming__edge:
+                    if edge.oper_status.chosen_dc == notification.device:
+                        self.log.info(f'Re-deploying service {edge.name}')
+                        edge.reactive_re_deploy()
+                    else:
+                        self.log.info(f'Leaving service {edge.name} on {edge.oper_status.chosen_dc} as is')
+
             return True
 
         except Exception as e:

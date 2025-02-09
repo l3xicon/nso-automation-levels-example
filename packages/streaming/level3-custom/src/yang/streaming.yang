@@ -110,6 +110,22 @@ module streaming {
           }
           units "ms";
       }
+      leaf energy-price {
+        description "The latest reported energy-price value for this DC.";
+        type uint32;
+        units USD/MWh;
+      }
+      leaf-list edge-clients {
+        description "The edge service instances currently depending on this DC.";
+        type leafref {
+          path /edge/name;
+        }
+      }
+    }
+    leaf edge-capacity {
+      description "The number of edge services this DC can handle.";
+      type uint32;
+      default 3;
     }
   }
 
