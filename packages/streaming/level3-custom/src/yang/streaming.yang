@@ -1,0 +1,185 @@
+module streaming {
+  yang-version 1.1;
+  namespace "http://com/example/basic-streaming/streaming";
+  prefix streaming;
+  include streaming-plan;
+
+  import ietf-inet-types {
+    prefix inet;
+  }
+  import tailf-ncs {
+    prefix ncs;
+  }
+  import tailf-common {
+    prefix tailf;
+  }
+  import tailf-kicker {
+    prefix kicker;
+  }
+  import Accedian-type {
+    prefix acdt;
+  }
+  import Accedian-service-endpoint {
+    prefix accsep;
+  }
+  import skylight-nc {
+    prefix skylight-nc;
+  }
+  import firewall-nc {
+    prefix firewall-nc;
+  }
+  import origin-nc {
+    prefix origin-nc;
+  }
+  import edge-nc {
+    prefix edge-nc;
+  }
+
+  description "
+    NSO Automation Levels Example
+    (C) 2024 Cisco Systems
+    Permission to use this code as a starting point hereby granted
+
+    This module implements an NSO nano service called 'edge' that connects to one
+    datacenter (DC), to deliver a (simulated) video streaming service. The list of
+    datacenters to choose from is also found in this module.
+
+    See the top level README file for more information
+    ";
+
+  revision 2024-01-01 {
+    description
+      "Initial revision.";
+  }
+
+// DC LIST //////////////////////////////////////////////////////////////////////
+
+  list dc {
+    description
+      "List of available datacenters, and pointers to the devices part of it";
+
+    key name;
+    leaf name {
+      type string;
+    }
+
+    leaf fw {
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+      must "derived-from(/ncs:devices/ncs:device[ncs:name=current()]/ncs:device-type/ncs:netconf/ncs:ned-id,
+            'firewall-nc:firewall-nc')" {
+        error-message "Only the name of a firewall device makes sense here.";
+      }
+    }
+    leaf media-origin {
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+      must "derived-from(/ncs:devices/ncs:device[ncs:name=current()]/ncs:device-type/ncs:netconf/ncs:ned-id,
+            'origin-nc:origin-nc')" {
+        error-message "Only the name of an origin video server device makes sense here.";
+      }
+    }
+    leaf skylight {
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+      must "derived-from(/ncs:devices/ncs:device[ncs:name=current()]/ncs:device-type/ncs:netconf/ncs:ned-id,
+            'skylight-nc:skylight-nc')" {
+        error-message "Only the name of a skylight device makes sense here.";
+      }
+    }
+    leaf skylight-endpoint-id {
+      type acdt:id;
+      tailf:non-strict-leafref {
+        path "/ncs:devices/ncs:device/ncs:config/acdsep:service-endpoints" +
+             "/acdsep:service-endpoint/acdsep:endpoint-id";
+      }
+    }
+    leaf is-active {
+      type boolean;
+      default false;
+    }
+    container oper-status {
+      config false;
+      tailf:info "The actual operational state of the DC.";
+      tailf:cdb-oper {
+          tailf:persistent true;
+      }
+      leaf jitter {
+          description "The latest reported jitter value for this DC.";
+          type decimal64 {
+              fraction-digits 3;
+          }
+          units "ms";
+      }
+    }
+  }
+
+// EDGE SERVICE /////////////////////////////////////////////////////////////////
+
+  list edge {
+    key name;
+
+    uses ncs:nano-plan-data;
+    uses ncs:service-data;
+    ncs:servicepoint "edge-servicepoint";
+
+    leaf name  {
+      type leafref {
+        path "/ncs:devices/ncs:device/ncs:name";
+      }
+      must "derived-from(/ncs:devices/ncs:device[ncs:name=current()]/ncs:device-type/ncs:netconf/ncs:ned-id,
+            'edge-nc:edge-nc')" {
+        error-message "Only the name of an edge device makes sense here.";
+      }
+    }
+    leaf dc {
+      type leafref {
+        path "/dc/name";
+      }
+    }
+    action load-from-storage {
+      tailf:actionpoint load-from-storage;
+      output {
+        leaf result {
+          type string;
+        }
+      }
+    }
+  }
+
+// ACTIONS //////////////////////////////////////////////////////////////////////
+
+  container actions {
+    action skylight-notification {
+      tailf:actionpoint skylight-notification;
+      input {
+        uses kicker:action-input-params;
+      }
+    }
+    action optimize {
+      tailf:actionpoint optimize;
+      output {
+        leaf result {
+          type string;
+        }
+      }
+    }
+    action vary-energy-price {
+      tailf:actionpoint vary-energy-price;
+      input {
+        leaf iterations {
+          type uint32;
+          default 10;
+        }
+      }
+      output {
+        leaf result {
+          type string;
+        }
+      }
+    }
+  }
+}
